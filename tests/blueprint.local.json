@@ -1,0 +1,26 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "landingPage": "/wp-admin/edit.php?post_type=tetote_job",
+  "steps": [
+    {
+      "step": "setSiteOptions",
+      "options": {
+        "blogname": "TETOTE Jobs Example（架空）",
+        "permalink_structure": "/%postname%/"
+      }
+    },
+    {
+      "step": "activatePlugin",
+      "pluginPath": "tetote-jobs/tetote-jobs.php"
+    },
+    {
+      "step": "runPHP",
+      "code": "<?php require '/wordpress/wp-load.php'; require TETOTE_JOBS_DIR . 'demo/seed.php'; tetote_jobs_demo_seed(); tetote_jobs_demo_remove_defaults();"
+    },
+    {
+      "step": "writeFile",
+      "path": "/wordpress/wp-content/mu-plugins/tetote-jobs-demo.php",
+      "data": "<?php\n// デモ用: 管理画面の表示を絞る（tetote-jobs/demo/admin.php）\nif (file_exists(WP_PLUGIN_DIR . '/tetote-jobs/demo/admin.php')) {\n  require WP_PLUGIN_DIR . '/tetote-jobs/demo/admin.php';\n}\n"
+    }
+  ]
+}
