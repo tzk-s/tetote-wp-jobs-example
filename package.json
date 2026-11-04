@@ -1,0 +1,18 @@
+{
+  "name": "tetote-wp-jobs-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "募集職種を WordPress のカスタム投稿で管理し、募集中／募集終了を一覧・詳細に反映するプラグインの公開用サンプル",
+  "scripts": {
+    "start": "wp-playground-cli server --mount=./tetote-jobs:/wordpress/wp-content/plugins/tetote-jobs --blueprint=./tests/blueprint.local.json --login",
+    "test": "node tests/run.mjs",
+    "lint:php": "node tests/lint-php.mjs"
+  },
+  "engines": {
+    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
+  },
+  "devDependencies": {
+    "@wp-playground/cli": "^3.1.62"
+  }
+}
