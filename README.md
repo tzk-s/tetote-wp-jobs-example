@@ -109,6 +109,7 @@ GitHub Actions（`.github/workflows/test.yml`）でも、push と PR のたび�
 確認済み（2026 年 11 月 4 日、Linux、Node.js 22.23.4、Playground CLI 3.1、PHP 8.3。WordPress は CLI が既定でダウンロードする最新版ではなく、ネットワークの制限のため npm で配布されている WordPress 6.5 のビルドを使用）:
 
 - `npm test` の結合テスト 23 件がすべて成功すること。内訳: 送信値のサニタイズ 6 件、保存の可否（nonce・権限）4 件、保存の流れ 3 件、職種 ID の固定 3 件、取得と並び 3 件、表示とエスケープ 4 件
+- GitHub Actions で、WordPress 6.5 と最新版の両方で `npm test` の 23 件が成功すること（2026 年 11 月 4 日）
 - nonce の確認を外すと、該当するテストが失敗して終了コードが 1 になること（テストが実際に検出できることの確認）
 - PHP の構文チェック（`php -l`、9 ファイル）
 - 手元で起動した WordPress（テーマは Twenty Twenty-Four）で、Chromium から次の操作
@@ -119,7 +120,6 @@ GitHub Actions（`.github/workflows/test.yml`）でも、push と PR のたび�
 
 未確認:
 
-- WordPress の最新版での動作（6.5 のビルドでのみ確認しています）
 - 管理画面の見た目（確認環境では管理画面の CSS・JavaScript を読み込めず、画面の装飾なしで操作のみ確認しました）
 - Safari・Firefox・実機、スクリーンリーダーでの読み上げ
 - Twenty Twenty-Four 以外のテーマでの表示

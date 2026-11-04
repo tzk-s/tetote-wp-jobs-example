@@ -19,8 +19,8 @@ jobs:
         # 対応する最低バージョン（プラグインの Requires at least）と最新版
         wp: ['6.5', 'latest']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: npm
@@ -31,6 +31,6 @@ jobs:
     name: PHP の構文チェック
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: php --version
       - run: node tests/lint-php.mjs
