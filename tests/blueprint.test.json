@@ -1,0 +1,8 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "steps": [
+    { "step": "setSiteOptions", "options": { "permalink_structure": "/%postname%/" } },
+    { "step": "activatePlugin", "pluginPath": "tetote-jobs/tetote-jobs.php" },
+    { "step": "runPHP", "code": "<?php require '/tetote-tests/integration.php';" }
+  ]
+}

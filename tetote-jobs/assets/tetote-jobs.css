@@ -1,0 +1,81 @@
+/*
+ * 公開側の最小限のスタイル（このサンプル用。元サイトのデザインではありません）
+ * 色や余白はテーマに任せ、状態の表示と並びだけを整える。
+ */
+.tetote-jobs {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tetote-jobs__item {
+  padding: 1rem 1.25rem;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+}
+
+.tetote-jobs__item.is-closed {
+  opacity: 0.8;
+}
+
+.tetote-jobs__name {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.tetote-jobs__status {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.tetote-jobs__summary,
+.tetote-jobs__closed-note,
+.tetote-jobs__more {
+  margin: 0.25rem 0 0;
+}
+
+.tetote-job__status.is-open {
+  font-weight: 700;
+}
+
+.tetote-job__closed {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid currentColor;
+}
+
+.tetote-job__rows {
+  display: grid;
+  grid-template-columns: 8em 1fr;
+  margin: 0;
+  border-top: 1px solid currentColor;
+}
+
+.tetote-job__rows dt,
+.tetote-job__rows dd {
+  margin: 0;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid currentColor;
+}
+
+.tetote-job__rows dt {
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .tetote-job__rows {
+    grid-template-columns: 1fr;
+  }
+
+  .tetote-job__rows dt {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
