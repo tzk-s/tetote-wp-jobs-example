@@ -176,7 +176,12 @@ function tetote_jobs_keep_published_slug($data, $postarr)
   if (TETOTE_JOBS_POST_TYPE !== $data['post_type'] || empty($postarr['ID']) || 'trash' === $data['post_status']) {
     return $data;
   }
-  $locked = tetote_jobs_locked_id((int) $postarr['ID']);
+  $post_id = (int) $postarr['ID'];
+  $locked = tetote_jobs_locked_id($post_id);
+  //  控えが無い旧投稿は、公開状態を離れる前（この保存の前）に控えておく。下書きに戻した後も固定が続くように
+  if ('' !== $locked && '' === (string) get_post_meta($post_id, TETOTE_JOBS_LOCKED_ID_KEY, true)) {
+    update_post_meta($post_id, TETOTE_JOBS_LOCKED_ID_KEY, $locked);
+  }
   if ('' !== $locked && $data['post_name'] !== $locked) {
     $data['post_name'] = $locked;
   }

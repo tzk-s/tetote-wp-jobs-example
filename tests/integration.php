@@ -98,6 +98,13 @@ wp_update_post(['ID' => $reopened_id, 'post_status' => 'draft']);
 wp_update_post(['ID' => $reopened_id, 'post_name' => 'reopen-after']);
 $check('一度公開した職種は、下書きに戻しても職種 ID を変更できない', 'reopen-before' === get_post_field('post_name', $reopened_id));
 
+$legacy_id = $create('legacy-id', '控えの無い旧投稿のテスト', true);
+//  ID を控える仕組みより前に公開された投稿を再現する
+delete_post_meta($legacy_id, TETOTE_JOBS_LOCKED_ID_KEY);
+wp_update_post(['ID' => $legacy_id, 'post_status' => 'draft']);
+wp_update_post(['ID' => $legacy_id, 'post_name' => 'legacy-renamed']);
+$check('控えの無い旧投稿も、下書きに戻した後に職種 ID を変更できない', 'legacy-id' === get_post_field('post_name', $legacy_id));
+
 $fixed_id = $create('fix-me', '形式外の ID で公開したテスト', true);
 delete_post_meta($fixed_id, TETOTE_JOBS_LOCKED_ID_KEY);
 //  日本語のタイトルから自動で作られたスラッグで公開された状態を再現する
