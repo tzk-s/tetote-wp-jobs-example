@@ -6,7 +6,7 @@
  * 結果は標準出力（と /tetote-test-output/result.txt）に書き、失敗が 1 件でもあれば例外を投げて Blueprint を失敗させる（npm test が失敗で終わる）。
  * 確認すること:
  *   - 保存時: nonce・権限の確認、項目ごとのサニタイズ、定義外のキーの無視、募集中フラグ
- *   - 職種 ID: 公開後は変更できないこと（下書きのうちは変えられること、ゴミ箱へ移せること）
+ *   - 職種 ID: 公開後は変更できないこと（下書きに戻しても同じ。公開前は変えられること、形式外の ID は公開後も直せること、ゴミ箱へ移して戻せること）
  *   - 取得: 募集中を先頭に並べること、形式の合わない ID を一覧に出さないこと
  *   - 表示: 値のエスケープ、募集終了の案内
  */
@@ -22,6 +22,8 @@ $check = function ($name, $condition) use (&$results) {
 $admin_id = wp_insert_user(['user_login' => 'test-editor-' . wp_rand(), 'user_pass' => wp_generate_password(), 'role' => 'administrator']);
 $subscriber_id = wp_insert_user(['user_login' => 'test-subscriber-' . wp_rand(), 'user_pass' => wp_generate_password(), 'role' => 'subscriber']);
 wp_set_current_user($admin_id);
+
+global $wpdb;
 
 $create = function ($slug, $title, $open, $status = 'publish', $order = 0) {
   $post_id = wp_insert_post([
@@ -91,13 +93,32 @@ $draft_id = $create('draft-before', '下書きのテスト', true, 'draft');
 wp_update_post(['ID' => $draft_id, 'post_name' => 'draft-after']);
 $check('下書きのうちは職種 ID を変更できる', 'draft-after' === get_post_field('post_name', $draft_id));
 
+$reopened_id = $create('reopen-before', '下書きに戻すテスト', true);
+wp_update_post(['ID' => $reopened_id, 'post_status' => 'draft']);
+wp_update_post(['ID' => $reopened_id, 'post_name' => 'reopen-after']);
+$check('一度公開した職種は、下書きに戻しても職種 ID を変更できない', 'reopen-before' === get_post_field('post_name', $reopened_id));
+
+$fixed_id = $create('fix-me', '形式外の ID で公開したテスト', true);
+delete_post_meta($fixed_id, TETOTE_JOBS_LOCKED_ID_KEY);
+//  日本語のタイトルから自動で作られたスラッグで公開された状態を再現する
+$wpdb->update($wpdb->posts, ['post_name' => '%e5%96%b6%e6%a5%ad'], ['ID' => $fixed_id]);
+clean_post_cache($fixed_id);
+wp_update_post(['ID' => $fixed_id, 'post_name' => 'fixed-id']);
+$check('形式外の ID で公開した職種は、公開したまま正しい ID へ直せる', 'fixed-id' === get_post_field('post_name', $fixed_id));
+wp_update_post(['ID' => $fixed_id, 'post_name' => 'fixed-again']);
+$check('正しい ID へ直した後は、その ID に固定される', 'fixed-id' === get_post_field('post_name', $fixed_id));
+
+$trashed_id = $create('trash-restore', 'ゴミ箱から戻すテスト', true);
+wp_trash_post($trashed_id);
+wp_untrash_post($trashed_id);
+$check('ゴミ箱から戻すと元の職種 ID に戻る', 'trash-restore' === get_post_field('post_name', $trashed_id));
+
 $check('公開済みの職種もゴミ箱へ移せる', false !== wp_trash_post($post_id) && 'trash' === get_post_status($post_id));
 
 /* ---------- 取得と並び ---------- */
 $create('zz-closed', '終了した職種', false, 'publish', 1);
 $create('zz-open', '<script>alert(1)</script>募集中の職種', true, 'publish', 2);
 $invalid_id = $create('zz-invalid', '形式外の ID', true, 'publish', 3);
-global $wpdb;
 //  日本語のタイトルから自動で作られたスラッグを再現する（パーマリンクを直さずに公開した場合）
 $wpdb->update($wpdb->posts, ['post_name' => '%e5%96%b6%e6%a5%ad'], ['ID' => $invalid_id]);
 clean_post_cache($invalid_id);

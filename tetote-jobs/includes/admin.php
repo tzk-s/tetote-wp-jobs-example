@@ -31,7 +31,7 @@ function tetote_jobs_render_status_box($post)
   wp_nonce_field(TETOTE_JOBS_NONCE_ACTION, TETOTE_JOBS_NONCE_NAME);
   $open = tetote_jobs_is_open($post->ID);
   $id = $post->post_name;
-  $locked = 'publish' === $post->post_status;
+  $locked = '' !== tetote_jobs_locked_id($post->ID);
   ?>
   <p>
     <label>
@@ -46,14 +46,14 @@ function tetote_jobs_render_status_box($post)
   <p><strong>職種 ID</strong>：<code><?php echo '' === $id ? '（未設定）' : esc_html($id); ?></code></p>
   <p class="description">
     <?php if ($locked): ?>
-      公開後は変更できません。詳細ページの URL と応募フォームに渡す値に使っているため、変えるとリンクが切れます。
+      公開済みのため変更できません（下書きに戻しても同じです）。詳細ページの URL と応募フォームに渡す値に使っているため、変えるとリンクが切れます。
     <?php else: ?>
       「パーマリンク」の編集で、半角英小文字・数字・ハイフン（例：<code>sales</code>）を入れてから公開してください。公開後は変更できません。
     <?php endif; ?>
   </p>
   <?php if ('' !== $id && !tetote_jobs_is_valid_id($id)): ?>
     <p class="description" style="color:#b32d2e;">
-      この職種 ID は形式が合わないため、公開しても募集一覧に表示されません。
+      この職種 ID は形式が合わないため、募集一覧に表示されません。「パーマリンク」の編集で半角英小文字・数字・ハイフンに直して保存してください（直した ID で公開すると固定されます）。
     </p>
   <?php endif; ?>
   <?php
@@ -148,21 +148,51 @@ add_action('save_post_' . TETOTE_JOBS_POST_TYPE, 'tetote_jobs_save_post');
 
 /*=======================================================================================
   職種 ID（スラッグ）を公開後に変えさせない
-  クイック編集・パーマリンクの編集・REST など、どの経路で変えようとしても元の値に戻す。
-  ゴミ箱へ移すときに WordPress が付ける「__trashed」は妨げない。
+
+  【固定する条件】正しい形式の ID で初めて公開したときに、その ID をメタ（TETOTE_JOBS_LOCKED_ID_KEY）に控える。
+    以後は投稿の状態に関係なく、控えた ID に戻す（下書きに戻してから変える、という抜け道を塞ぐ）。
+  【形式の合わない ID で公開した場合】控えない。一覧には出ないので、公開したままでも正しい ID へ直せる。
+    直した ID で保存した時点で固定する。
+  【ゴミ箱】WordPress がスラッグに付ける「__trashed」は妨げない（戻すと控えた ID に戻る）。
+  クイック編集・パーマリンクの編集・REST など、どの経路で変えようとしても同じ。
 =======================================================================================*/
+
+/**
+ * 固定済みの職種 ID（未固定なら空文字）
+ * 控えが無くても、すでに正しい ID で公開されている投稿（このプラグインより前に公開したもの）は固定済みとして扱う。
+ */
+function tetote_jobs_locked_id($post_id)
+{
+  $locked = (string) get_post_meta($post_id, TETOTE_JOBS_LOCKED_ID_KEY, true);
+  if ('' !== $locked) {
+    return $locked;
+  }
+  $post = get_post($post_id);
+  return $post && 'publish' === $post->post_status && tetote_jobs_is_valid_id($post->post_name) ? $post->post_name : '';
+}
+
 function tetote_jobs_keep_published_slug($data, $postarr)
 {
   if (TETOTE_JOBS_POST_TYPE !== $data['post_type'] || empty($postarr['ID']) || 'trash' === $data['post_status']) {
     return $data;
   }
-  $current = get_post((int) $postarr['ID']);
-  if ($current && 'publish' === $current->post_status && '' !== $current->post_name && $data['post_name'] !== $current->post_name) {
-    $data['post_name'] = $current->post_name;
+  $locked = tetote_jobs_locked_id((int) $postarr['ID']);
+  if ('' !== $locked && $data['post_name'] !== $locked) {
+    $data['post_name'] = $locked;
   }
   return $data;
 }
 add_filter('wp_insert_post_data', 'tetote_jobs_keep_published_slug', 10, 2);
+
+/** 正しい形式の ID で公開されたら、その ID を控える（一度控えたら上書きしない） */
+function tetote_jobs_lock_id_on_publish($post_id, $post)
+{
+  if ('publish' !== $post->post_status || '' !== (string) get_post_meta($post_id, TETOTE_JOBS_LOCKED_ID_KEY, true) || !tetote_jobs_is_valid_id($post->post_name)) {
+    return;
+  }
+  update_post_meta($post_id, TETOTE_JOBS_LOCKED_ID_KEY, $post->post_name);
+}
+add_action('save_post_' . TETOTE_JOBS_POST_TYPE, 'tetote_jobs_lock_id_on_publish', 20, 2);
 
 /*=======================================================================================
   管理画面の一覧: 募集状態と職種 ID の列

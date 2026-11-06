@@ -17,6 +17,9 @@ if (!defined('ABSPATH')) {
 const TETOTE_JOBS_OPEN_KEY = '_tetote_job_open';
 
 /** 職種 ID（= 投稿のスラッグ）の形式。URL と、応募フォームに渡す値を兼ねる */
+/** 初めて公開したときの職種 ID を控えるメタキー（以後はこの値に固定する） */
+const TETOTE_JOBS_LOCKED_ID_KEY = '_tetote_job_locked_id';
+
 const TETOTE_JOBS_ID_PATTERN = '/^[a-z0-9-]{1,64}$/';
 
 /** 1 項目あたりの文字数の上限（貼り付けミスで極端に長い値が保存されないように） */
