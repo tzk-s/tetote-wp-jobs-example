@@ -1,0 +1,36 @@
+# プッシュと PR のたびに、まっさらな WordPress でプラグインの結合テストを実行する
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  integration:
+    name: WordPress ${{ matrix.wp }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 対応する最低バージョン（プラグインの Requires at least）と最新版
+        wp: ['6.5', 'latest']
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test -- --wp=${{ matrix.wp }} --php=8.3
+
+  lint-php:
+    name: PHP の構文チェック
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - run: php --version
+      - run: node tests/lint-php.mjs

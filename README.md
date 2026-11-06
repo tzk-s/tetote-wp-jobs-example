@@ -1,5 +1,7 @@
 # tetote-wp-jobs-example
 
+[![test](https://github.com/tzk-s/tetote-wp-jobs-example/actions/workflows/test.yml/badge.svg)](https://github.com/tzk-s/tetote-wp-jobs-example/actions/workflows/test.yml)
+
 募集職種を WordPress のカスタム投稿で管理し、管理画面で「募集中／募集終了」を切り替えると公開側の一覧・詳細に反映される、プラグインの公開用サンプルです。
 
 > このリポジトリは [tetote-application-example](https://github.com/tzk-s/tetote-application-example) とは連携しません。同じ募集情報を題材に、WordPress 側の登録・保存・表示だけを独立して確認できる公開用サンプルです。
@@ -16,6 +18,8 @@
 
 1. **[管理画面を試す](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/tzk-s/tetote-wp-jobs-example/main/playground/blueprint-admin.json)** … 管理者としてログインした状態で「募集職種」の一覧が開きます
 2. **[公開側の表示を見る](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/tzk-s/tetote-wp-jobs-example/main/playground/blueprint-public.json)** … 募集一覧のページが開きます
+
+2 つのリンクは、それぞれ別の WordPress を起動します。「管理画面を試す」で変えた内容は、「公開側の表示を見る」には反映されません（こちらは毎回初期データで開きます）。変更の反映を確かめるときは、「管理画面を試す」で開いた同じ画面のまま、公開側へ移動してください。
 
 おすすめの確認手順:
 
@@ -38,6 +42,7 @@ Playground は起動のたびに GitHub の main ブランチからプラグイ�
 
 ```
 .
+├── .github/workflows/test.yml   # GitHub Actions での結合テスト・PHP の構文チェック
 ├── tetote-jobs/                 # プラグイン本体（このフォルダーを wp-content/plugins/ に置く）
 │   ├── tetote-jobs.php          # プラグインのヘッダーと読み込み
 │   ├── includes/
@@ -76,6 +81,8 @@ npm run lint:php  # PHP の構文チェック（手元に PHP 8.0 以上が必�
 
 `npm test` は、プラグインを有効化した WordPress の中で `tests/integration.php` を実行し、結果を表示します。1 件でも失敗すると終了コードが 1 になります。
 
+GitHub Actions（`.github/workflows/test.yml`）でも、push と PR のたびに同じテストを WordPress 6.5 と最新版で実行しています。結果は冒頭のバッジと Actions のタブから確認できます。
+
 普段の WordPress に入れる場合は、`tetote-jobs/` フォルダーを `wp-content/plugins/` に置いて有効化し、固定ページに `[tetote_jobs]` を書いてください。パーマリンクは「投稿名」などの URL が読める形式を想定しています。
 
 ## 使用技術・実行環境
@@ -102,6 +109,7 @@ npm run lint:php  # PHP の構文チェック（手元に PHP 8.0 以上が必�
 確認済み（2026 年 11 月 4 日、Linux、Node.js 22.23.4、Playground CLI 3.1、PHP 8.3。WordPress は CLI が既定でダウンロードする最新版ではなく、ネットワークの制限のため npm で配布されている WordPress 6.5 のビルドを使用）:
 
 - `npm test` の結合テスト 23 件がすべて成功すること。内訳: 送信値のサニタイズ 6 件、保存の可否（nonce・権限）4 件、保存の流れ 3 件、職種 ID の固定 3 件、取得と並び 3 件、表示とエスケープ 4 件
+- GitHub Actions で、WordPress 6.5 と最新版の両方で `npm test` の 23 件が成功すること（2026 年 11 月 4 日）
 - nonce の確認を外すと、該当するテストが失敗して終了コードが 1 になること（テストが実際に検出できることの確認）
 - PHP の構文チェック（`php -l`、9 ファイル）
 - 手元で起動した WordPress（テーマは Twenty Twenty-Four）で、Chromium から次の操作
@@ -112,7 +120,6 @@ npm run lint:php  # PHP の構文チェック（手元に PHP 8.0 以上が必�
 
 未確認:
 
-- WordPress の最新版での動作（6.5 のビルドでのみ確認しています）
 - 管理画面の見た目（確認環境では管理画面の CSS・JavaScript を読み込めず、画面の装飾なしで操作のみ確認しました）
 - Safari・Firefox・実機、スクリーンリーダーでの読み上げ
 - Twenty Twenty-Four 以外のテーマでの表示
