@@ -10,7 +10,8 @@
     "lint:php": "node tests/lint-php.mjs"
   },
   "engines": {
-    "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
+    "node": "^24.22.1 || >=26.12.1",
+    "npm": ">=11.16.0"
   },
   "devDependencies": {
     "@wp-playground/cli": "^3.1.62"
