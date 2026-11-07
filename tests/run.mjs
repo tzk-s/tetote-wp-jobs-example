@@ -19,6 +19,8 @@ const args = [
   `--mount=${join(root, 'tests')}:/tetote-tests`,
   `--mount=${output}:/tetote-test-output`,
   `--blueprint=${join(root, 'tests/blueprint.test.json')}`,
+  // PHP は Docker・Playground のデモと同じ 8.5 を既定にする（--php=8.3 などで上書きできる）
+  ...(process.argv.slice(2).some((arg) => arg.startsWith('--php')) ? [] : ['--php=8.5']),
   ...process.argv.slice(2),
 ];
 

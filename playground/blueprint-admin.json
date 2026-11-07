@@ -7,7 +7,7 @@
   },
   "landingPage": "/wp-admin/edit.php?post_type=tetote_job",
   "preferredVersions": {
-    "php": "8.3",
+    "php": "8.5",
     "wp": "latest"
   },
   "login": true,
