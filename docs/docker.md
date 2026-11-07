@@ -22,7 +22,7 @@ WordPress Playground とは別に、Docker で「普通の WordPress」を手元
 - `wordpress:cli-2.12-php8.5` … WP-CLI 2.12。PHP を WordPress 側とそろえている
 - 3 つとも arm64（Apple シリコンの Mac）を含むマルチアーキテクチャのイメージで、`platform` の指定は不要です
 
-同じタグでも、セキュリティ修正が出ると中身（PHP の修正版など）が更新されます。取り込むときは `docker compose pull` のあと `docker compose up -d` を実行してください。
+同じタグでも、セキュリティ修正が出ると中身（PHP の修正版など）が更新されます。取り込むときは `docker compose pull` のあと `docker compose up -d` を実行してください。これで新しくなるのは PHP と Apache です。WordPress 本体は最初の起動時にボリューム（`wp_data`）へコピーしたものを使い続けるので、管理画面の「更新」か `docker compose --profile tools run --rm cli wp core update` で更新します。
 
 ## 必要なもの
 
@@ -42,7 +42,8 @@ docker compose --profile tools run --rm cli sh /opt/tetote-docker/setup.sh   # �
 
 `setup.sh`（`docker/setup.sh`）は何度実行しても同じ結果になります。
 
-- WordPress のインストール・パーマリンク設定・初期サンプル記事の削除は、未インストールのときだけ
+- WordPress のインストールと初期サンプル記事の削除は、未インストールのときだけ
+- パーマリンクは、未設定のときだけ「投稿名」にする（初回の実行が途中で止まっても、もう一度実行すれば設定される）
 - 架空の募集職種と募集一覧のページは、同じ職種 ID・スラッグのものが無いときだけ作る（Playground と同じ `tetote-jobs/demo/seed.php` を使用）。管理画面で変えた内容は上書きしない
 
 データを消す処理は含みません。
@@ -76,11 +77,25 @@ docker compose up -d
 docker compose --profile tools run --rm cli sh /opt/tetote-docker/setup.sh
 ```
 
-`-v` を付けたときだけボリュームが消えます。対象はこの構成のボリュームだけで、他のプロジェクトには影響しません。
+`-v` を付けたときだけボリュームが消えます。対象はこのプロジェクト名（既定は `tetote-wp-jobs-example`）のボリュームだけです。別のフォルダーに置いたコピーも同じプロジェクト名で動かしている場合は、そちらのデータも消えます（下の「2 つ目のコピーを動かす」）。
 
 ## ポートを変える
 
 `.env` の `WP_PORT` を変えて、`docker compose up -d` を実行し直します（例: `WP_PORT=8090` → http://127.0.0.1:8090/ ）。サイトの URL もこの値から決めているので、設定し直しは要りません。
+
+## 2 つ目のコピーを動かす
+
+プロジェクト名は `compose.yaml` で `tetote-wp-jobs-example` に固定しています（どのフォルダー名で clone しても、`docker volume ls` に同じ名前で出るようにするため）。そのため、同じリポジトリを別のフォルダーにもう 1 つ置いて `up -d` すると、1 つ目と同じボリュームを使います。
+
+分けたいときは、2 つ目の `.env` で `COMPOSE_PROJECT_NAME` と `WP_PORT` の両方を変えてください（`.env.example` にコメントアウトした例があります）。
+
+```bash
+# 2 つ目のフォルダーの .env
+WP_PORT=8090
+COMPOSE_PROJECT_NAME=tetote-wp-jobs-example-2
+```
+
+`docker compose config | head -1` で、どのプロジェクト名で動くかを確認できます。
 
 ## 使い終わったら
 
