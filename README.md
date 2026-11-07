@@ -145,12 +145,18 @@ Docker（2026 年 11 月 7 日、Linux の amd64、Docker 29.9・Compose 5.6、W
 - `setup.sh` をもう一度実行しても、職種・ページが増えず、変更した募集状態も上書きされないこと
 - 結合テスト 28 件が PHP 8.5.12 の Docker（WordPress 7.1）と Playground CLI（PHP 8.5、WordPress 6.5）の両方で成功し、PHP の警告・非推奨の通知が出ないこと
 
+Docker（2026 年 11 月 7 日、作者の Mac（Apple シリコン）、Docker Desktop 4.98・Engine 29.9（linux/arm64）・Compose 5.6）:
+
+- `platform` の指定なしで arm64 のイメージが使われ、`up -d` と `setup.sh` で起動すること
+- 管理画面で「ソリューション営業」を募集終了にすると、公開側の一覧に反映されること
+- `stop` / `start`、`down` → `up -d`、`setup.sh` の再実行のあとも、募集終了のまま残り、職種が増えないこと
+
 未確認:
 
 - 管理画面の見た目（確認環境では管理画面の CSS・JavaScript を読み込めず、画面の装飾なしで操作のみ確認しました）
 - Safari・Firefox・実機、スクリーンリーダーでの読み上げ
 - Twenty Twenty-Four 以外のテーマでの表示
-- Apple シリコンの Mac での Docker の動作（確認は Linux の amd64 のみ）
+- Mac の Docker で、プラグインの変更が再起動なしで反映されること（Linux でのみ確認）
 
 ## 著作権・ライセンス
 
