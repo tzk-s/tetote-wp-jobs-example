@@ -2,7 +2,8 @@
 # 初期設定とデモデータの投入（docker compose run --rm cli sh /opt/tetote-docker/setup.sh）
 #
 # 何度実行しても同じ結果になるようにしている。
-#   - WordPress のインストール・パーマリンク設定・初期サンプル記事の削除は、未インストールのときだけ行う
+#   - WordPress のインストールと初期サンプル記事の削除は、未インストールのときだけ行う
+#   - パーマリンクは未設定のときだけ「投稿名」にする（途中で止まっても、再実行で設定される）
 #   - プラグインは無効なら有効化する
 #   - 架空の募集職種と募集一覧のページは、同じ職種 ID・スラッグのものが無いときだけ作る（既存の内容は変えない）
 set -eu
@@ -19,7 +20,7 @@ until [ -f /var/www/html/wp-config.php ]; do
 done
 
 if wp core is-installed 2>/dev/null; then
-  echo "WordPress はインストール済みです（インストール・パーマリンク・初期記事には触れません）。"
+  echo "WordPress はインストール済みです（インストールと初期記事には触れません）。"
 else
   echo "WordPress をインストールします。"
   wp core install \
@@ -29,8 +30,13 @@ else
     --admin_password="${WP_ADMIN_PASSWORD}" \
     --admin_email="${WP_ADMIN_EMAIL}" \
     --skip-email
-  wp rewrite structure '/%postname%/'
   FRESH_INSTALL=1
+fi
+
+# パーマリンクは、未設定（初期値の空）のときだけ「投稿名」にする。
+# インストールの直後に止まった場合も、再実行すればここで設定される。管理画面で変えた設定は上書きしない
+if [ -z "$(wp option get permalink_structure)" ]; then
+  wp rewrite structure '/%postname%/'
 fi
 
 if wp plugin is-active tetote-jobs; then
