@@ -1,0 +1,78 @@
+# ローカル検証専用の Docker Compose 設定（本番・公開サーバーには使わない）
+#
+#   db        … MariaDB。データは名前付きボリューム db_data に保存する（コンテナを作り直しても残る）
+#   wordpress … WordPress（Apache + PHP 8.5）。http://127.0.0.1:<WP_PORT>/ で開く
+#   cli       … 初期設定にだけ使う WP-CLI。普段は起動しない（profiles: tools）
+#
+# 値は .env から読む（.env.example をコピーして作る）。使い方は docs/docker.md
+name: tetote-wp-jobs-example
+
+x-db-env: &db-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_NAME: ${DB_NAME:?.env がありません。cp .env.example .env で作ってください}
+  WORDPRESS_DB_USER: ${DB_USER:?.env がありません}
+  WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:?.env がありません}
+  # ポート番号を変えてもサイトの URL が合うように、URL を毎回この値から決める
+  WORDPRESS_CONFIG_EXTRA: |
+    define('WP_HOME', 'http://127.0.0.1:${WP_PORT:-8088}');
+    define('WP_SITEURL', 'http://127.0.0.1:${WP_PORT:-8088}');
+
+services:
+  db:
+    image: mariadb:11.8
+    environment:
+      MARIADB_DATABASE: ${DB_NAME:?.env がありません}
+      MARIADB_USER: ${DB_USER:?.env がありません}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?.env がありません}
+      # root は DB の初期化にだけ使う。WordPress は上の専用ユーザーで接続する
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?.env がありません}
+    volumes:
+      - db_data:/var/lib/mysql
+    # DB が接続を受け付けられるようになったかを確かめる（WordPress はこれを待ってから起動する）
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    # ports は書かない（DB はホストへ公開しない）
+
+  wordpress:
+    image: wordpress:7.1-php8.5-apache
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # 127.0.0.1 に限定し、同じネットワークの他の PC からは開けないようにする
+      - "127.0.0.1:${WP_PORT:-8088}:80"
+    environment:
+      <<: *db-env
+    volumes:
+      - wp_data:/var/www/html
+      # 手元のプラグインをそのまま見せる（バインドマウント）。変更は再読み込みで反映される
+      - ./tetote-jobs:/var/www/html/wp-content/plugins/tetote-jobs:ro
+
+  cli:
+    image: wordpress:cli-2.12-php8.5
+    profiles: ["tools"]
+    depends_on:
+      db:
+        condition: service_healthy
+      wordpress:
+        condition: service_started
+    # WordPress のイメージと同じユーザー（www-data = 33）でファイルを扱う
+    user: "33:33"
+    environment:
+      <<: *db-env
+      WP_PORT: ${WP_PORT:-8088}
+      WP_ADMIN_USER: ${WP_ADMIN_USER:?.env がありません}
+      WP_ADMIN_PASSWORD: ${WP_ADMIN_PASSWORD:?.env がありません}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL:?.env がありません}
+    volumes:
+      - wp_data:/var/www/html
+      - ./tetote-jobs:/var/www/html/wp-content/plugins/tetote-jobs:ro
+      - ./docker:/opt/tetote-docker:ro
+
+volumes:
+  db_data:
+  wp_data:

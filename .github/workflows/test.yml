@@ -25,7 +25,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm test -- --wp=${{ matrix.wp }} --php=8.3
+      - run: npm test -- --wp=${{ matrix.wp }} --php=8.5
 
   lint-php:
     name: PHP の構文チェック

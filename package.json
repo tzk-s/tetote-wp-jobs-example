@@ -5,7 +5,7 @@
   "type": "module",
   "description": "募集職種を WordPress のカスタム投稿で管理し、募集中／募集終了を一覧・詳細に反映するプラグインの公開用サンプル",
   "scripts": {
-    "start": "wp-playground-cli server --mount=./tetote-jobs:/wordpress/wp-content/plugins/tetote-jobs --blueprint=./tests/blueprint.local.json --login",
+    "start": "wp-playground-cli server --mount=./tetote-jobs:/wordpress/wp-content/plugins/tetote-jobs --blueprint=./tests/blueprint.local.json --php=8.5 --login",
     "test": "node tests/run.mjs",
     "lint:php": "node tests/lint-php.mjs"
   },

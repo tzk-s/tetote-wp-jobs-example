@@ -56,6 +56,10 @@ Playground は起動のたびに GitHub の main ブランチからプラグイ�
 │       ├── seed.php             # 架空データの投入
 │       └── admin.php            # 管理画面のメニューを絞る・一時環境の案内
 ├── playground/                  # WordPress Playground の Blueprint（管理画面用・公開側用）
+├── compose.yaml                 # Docker でのローカル検証（WordPress・MariaDB・WP-CLI）
+├── .env.example                 # Docker 用の設定例（架空のローカル専用の値）
+├── docker/setup.sh              # Docker 用の初期設定・架空データの投入
+├── docs/docker.md               # Docker の使い方
 └── tests/
     ├── integration.php          # WordPress 上で動かす結合テスト
     ├── blueprint.test.json      # テスト用の Blueprint
@@ -83,6 +87,18 @@ npm run lint:php  # PHP の構文チェック（手元に PHP 8.0 以上が必�
 
 GitHub Actions（`.github/workflows/test.yml`）でも、push と PR のたびに同じテストを WordPress 6.5 と最新版で実行しています。結果は冒頭のバッジと Actions のタブから確認できます。
 
+### Docker で動かす
+
+Playground とは別に、Docker で Apache・PHP 8.5・MariaDB の WordPress を立てて確認できます。データは名前付きボリュームに保存され、コンテナを止めたり作り直したりしても残ります。ローカルでの確認専用です。
+
+```bash
+cp .env.example .env
+docker compose up -d
+docker compose --profile tools run --rm cli sh /opt/tetote-docker/setup.sh
+```
+
+http://127.0.0.1:8088/jobs-list/ が開きます（管理画面は `/wp-admin/`、ログイン情報は `.env`）。止める・再開・データを消してやり直す手順、ポートの変え方は [docs/docker.md](docs/docker.md) にまとめています。
+
 普段の WordPress に入れる場合は、`tetote-jobs/` フォルダーを `wp-content/plugins/` に置いて有効化し、固定ページに `[tetote_jobs]` を書いてください。パーマリンクは「投稿名」などの URL が読める形式を想定しています。
 
 ## 使用技術・実行環境
@@ -91,7 +107,8 @@ GitHub Actions（`.github/workflows/test.yml`）でも、push と PR のたび�
 | --- | --- |
 | 言語 | PHP 8.0 以上（WordPress 6.5 以上） |
 | CMS | WordPress のコア機能のみ（カスタム投稿・メタボックス・ショートコード）。Advanced Custom Fields などのプラグインやフレームワークは使っていません |
-| デモ・テストの実行 | WordPress Playground（ブラウザー版・CLI 版） |
+| デモ・テストの実行 | WordPress Playground（ブラウザー版・CLI 版。PHP 8.5） |
+| ローカル検証 | Docker Compose（`wordpress:7.1-php8.5-apache`・`mariadb:11.8`・`wordpress:cli-2.12-php8.5`） |
 
 ## 元サイトとの関係
 
@@ -119,11 +136,27 @@ GitHub Actions（`.github/workflows/test.yml`）でも、push と PR のたび�
   - スマートフォン幅（iPhone 13 相当）で詳細ページに横スクロールが出ないこと
 - 「ブラウザーで試す」のリンクから、playground.wordpress.net でデモが起動すること（作者のブラウザーで確認）
 
+Docker（2026 年 11 月 7 日、Linux の amd64、Docker 29.9・Compose 5.6、WordPress 7.1.4・PHP 8.5.12・MariaDB 11.8）:
+
+- 空のボリュームから `up -d` と `setup.sh` で起動し、管理画面・募集一覧・詳細ページが開くこと
+- 管理画面で「ソリューション営業」の「募集中」を外すと、公開側の一覧と詳細に「募集終了」が出ること。戻すと元に戻ること
+- `tetote-jobs/` の PHP を書き換えると、再起動なしで表示が変わること（確認後に元に戻した）。コンテナ側からは書き込めないこと
+- `stop` / `start`・`restart`・`down` → `up -d` のあとも、募集状態の変更が残っていること
+- `setup.sh` をもう一度実行しても、職種・ページが増えず、変更した募集状態も上書きされないこと
+- 結合テスト 28 件が PHP 8.5.12 の Docker（WordPress 7.1）と Playground CLI（PHP 8.5、WordPress 6.5）の両方で成功し、PHP の警告・非推奨の通知が出ないこと
+
+Docker（2026 年 11 月 7 日、作者の Mac（Apple シリコン）、Docker Desktop 4.98・Engine 29.9（linux/arm64）・Compose 5.6）:
+
+- `platform` の指定なしで arm64 のイメージが使われ、`up -d` と `setup.sh` で起動すること
+- 管理画面で「ソリューション営業」を募集終了にすると、公開側の一覧に反映されること
+- `stop` / `start`、`down` → `up -d`、`setup.sh` の再実行のあとも、募集終了のまま残り、職種が増えないこと
+
 未確認:
 
 - 管理画面の見た目（確認環境では管理画面の CSS・JavaScript を読み込めず、画面の装飾なしで操作のみ確認しました）
 - Safari・Firefox・実機、スクリーンリーダーでの読み上げ
 - Twenty Twenty-Four 以外のテーマでの表示
+- Mac の Docker で、プラグインの変更が再起動なしで反映されること（Linux でのみ確認）
 
 ## 著作権・ライセンス
 
