@@ -6,7 +6,13 @@
  * Requires at least: 6.5
  * Requires PHP:      8.0
  * Author:            tzk-s
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       tetote-jobs
+ *
+ * Copyright (c) 2026 tzk-s
+ * このプラグインは GNU General Public License v2 またはそれ以降のバージョンで提供します（同梱の LICENSE）。
+ * ポートフォリオ用のデモで、本番環境での動作・セキュリティ・互換性の保証やサポートはありません。
  *
  * 【役割の分け方】
  *   includes/fields.php    … 募集要項の項目の定義（項目名・入力の種類・更新担当者向けの説明）。ここ 1 か所だけで持つ
