@@ -37,14 +37,14 @@ docker compose up -d                                         # 起動（初回�
 docker compose --profile tools run --rm cli sh /opt/tetote-docker/setup.sh   # 初期設定・架空データの投入
 ```
 
-- 公開側: http://127.0.0.1:8088/jobs-list/
+- 公開側: http://127.0.0.1:8088/jobs-list/ ・採用デモページ http://127.0.0.1:8088/recruit-demo/
 - 管理画面: http://127.0.0.1:8088/wp-admin/ （ユーザー名・パスワードは `.env` の `WP_ADMIN_USER` / `WP_ADMIN_PASSWORD`）
 
 `setup.sh`（`docker/setup.sh`）は何度実行しても同じ結果になります。
 
 - WordPress のインストールと初期サンプル記事の削除は、未インストールのときだけ
 - パーマリンクは、未設定のときだけ「投稿名」にする（初回の実行が途中で止まっても、もう一度実行すれば設定される）
-- 架空の募集職種と募集一覧のページは、同じ職種 ID・スラッグのものが無いときだけ作る（Playground と同じ `tetote-jobs/demo/seed.php` を使用）。管理画面で変えた内容は上書きしない
+- 架空の募集職種・募集一覧のページ・採用デモページ（`/recruit-demo/`）は、同じ職種 ID・スラッグのものが無いときだけ作る（Playground と同じ `tetote-jobs/demo/seed.php` を使用）。管理画面で変えた内容は上書きしない
 
 データを消す処理は含みません。
 
