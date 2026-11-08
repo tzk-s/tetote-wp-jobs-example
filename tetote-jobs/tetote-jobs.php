@@ -14,6 +14,7 @@
  *   includes/query.php     … 募集職種の取得・並べ替え・募集中かどうかの判定
  *   includes/admin.php     … 管理画面の入力欄・保存処理・一覧の列・職種 ID の固定
  *   includes/frontend.php  … 公開側の一覧（ショートコード）と詳細の表示
+ *   includes/block.php     … 募集一覧ブロックの登録・公開側の表示・入力値の検証（編集画面は src/jobs-list/ の TSX）
  *
  * 応募の受付・メール送信は扱わない（このサンプルの対象外）。
  */
@@ -31,6 +32,7 @@ require_once TETOTE_JOBS_DIR . 'includes/post-type.php';
 require_once TETOTE_JOBS_DIR . 'includes/query.php';
 require_once TETOTE_JOBS_DIR . 'includes/admin.php';
 require_once TETOTE_JOBS_DIR . 'includes/frontend.php';
+require_once TETOTE_JOBS_DIR . 'includes/block.php';
 
 /**
  * 有効化時にパーマリンクを作り直す（/jobs/<職種 ID>/ をすぐに開けるようにする）。

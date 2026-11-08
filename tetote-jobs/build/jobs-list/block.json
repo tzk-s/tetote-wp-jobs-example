@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "tetote-jobs/jobs-list",
+  "version": "1.0.0",
+  "title": "募集一覧（TETOTE Jobs）",
+  "category": "widgets",
+  "icon": "groups",
+  "description": "募集職種を一覧で表示します。すべての職種（件数を指定）か、特定の 1 職種を選べます。",
+  "keywords": [
+    "募集",
+    "求人",
+    "採用",
+    "jobs"
+  ],
+  "textdomain": "tetote-jobs",
+  "attributes": {
+    "jobId": {
+      "type": "string",
+      "default": ""
+    },
+    "count": {
+      "type": "integer",
+      "default": 3
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": [
+      "wide"
+    ]
+  },
+  "editorScript": "file:./index.js",
+  "style": "tetote-jobs",
+  "render": "file:./render.php"
+}
