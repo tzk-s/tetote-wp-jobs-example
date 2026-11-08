@@ -4,16 +4,29 @@
   "private": true,
   "type": "module",
   "description": "募集職種を WordPress のカスタム投稿で管理し、募集中／募集終了を一覧・詳細に反映するプラグインの公開用サンプル",
+  "license": "SEE LICENSE IN README.md",
   "scripts": {
     "start": "wp-playground-cli server --mount=./tetote-jobs:/wordpress/wp-content/plugins/tetote-jobs --blueprint=./tests/blueprint.local.json --php=8.5 --login",
     "test": "node tests/run.mjs",
-    "lint:php": "node tests/lint-php.mjs"
+    "lint:php": "node tests/lint-php.mjs",
+    "build": "wp-scripts build --webpack-src-dir=src --output-path=tetote-jobs/build",
+    "build:watch": "wp-scripts start --webpack-src-dir=src --output-path=tetote-jobs/build",
+    "typecheck": "tsc --noEmit"
   },
   "engines": {
     "node": "^24.22.1 || >=26.12.1",
     "npm": ">=11.16.0"
   },
   "devDependencies": {
-    "@wp-playground/cli": "^3.1.62"
+    "@types/react": "19.3.0",
+    "@wordpress/api-fetch": "8.1.0",
+    "@wordpress/block-editor": "20.0.0",
+    "@wordpress/blocks": "17.1.0",
+    "@wordpress/components": "44.0.0",
+    "@wordpress/element": "10.1.0",
+    "@wordpress/scripts": "37.1.0",
+    "@wordpress/server-side-render": "7.1.0",
+    "@wp-playground/cli": "^3.1.62",
+    "typescript": "6.0.3"
   }
 }

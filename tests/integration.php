@@ -9,6 +9,8 @@
  *   - 職種 ID: 公開後は変更できないこと（下書きに戻しても同じ。公開前は変えられること、形式外の ID は公開後も直せること、ゴミ箱へ移して戻せること）
  *   - 取得: 募集中を先頭に並べること、形式の合わない ID を一覧に出さないこと
  *   - 表示: 値のエスケープ、募集終了の案内
+ *   - 募集一覧ブロック: 設定値の検証（件数の範囲・職種 ID の形式）、表示する職種の選び方、該当なし・募集終了の表示、編集画面用 API の権限
+ *   - 採用デモページ: 再実行してもページが増えず、編集した内容を上書きしないこと
  */
 
 require_once '/wordpress/wp-load.php';
@@ -151,9 +153,62 @@ $closed['rows'][0]['value'] = "<img src=x onerror=alert(1)>\n2 行目";
 $after = tetote_jobs_render_detail_after($closed);
 $check('複数行の値をエスケープしてから改行を <br> にする', false !== strpos($after, '&lt;img src=x onerror=alert(1)&gt;<br>'));
 
+/* ---------- 募集一覧ブロック: 入力値の検証と選び方（DB を使わない） ---------- */
+$n = tetote_jobs_block_normalize_attributes(['jobId' => '', 'count' => 99]);
+$check('ブロック: 件数は 20 を上限にする', 20 === $n['count'] && '' === $n['job_id'] && $n['valid']);
+$check('ブロック: 件数は 1 を下限にする', 1 === tetote_jobs_block_normalize_attributes(['count' => -5])['count']);
+$check('ブロック: 数値でない件数は初期値の 3 にする', 3 === tetote_jobs_block_normalize_attributes(['count' => 'abc'])['count']);
+$check('ブロック: 設定が無ければすべての職種・3 件', ['job_id' => '', 'count' => 3, 'valid' => true] === tetote_jobs_block_normalize_attributes(null));
+$check('ブロック: 形式外の職種 ID は該当なしとして扱う', false === tetote_jobs_block_normalize_attributes(['jobId' => '<script>'])['valid']);
+$check('ブロック: 文字列でない職種 ID はすべての職種として扱う', '' === tetote_jobs_block_normalize_attributes(['jobId' => ['a']])['job_id']);
+
+$sample = [['id' => 'a', 'open' => true], ['id' => 'b', 'open' => true], ['id' => 'c', 'open' => false]];
+$pick = fn($attrs) => array_column(tetote_jobs_block_select_jobs($sample, tetote_jobs_block_normalize_attributes($attrs)), 'id');
+$check('ブロック: すべての職種は先頭から件数分', ['a', 'b'] === $pick(['count' => 2]));
+$check('ブロック: 1 職種を選ぶと件数は使わない', ['c'] === $pick(['jobId' => 'c', 'count' => 1]));
+$check('ブロック: 選んだ職種が無ければ空（該当なし）', [] === $pick(['jobId' => 'zzz']));
+$check('ブロック: 形式外の職種 ID は空（すべての職種にしない）', [] === $pick(['jobId' => 'A B']));
+
+/* ---------- 募集一覧ブロック: 登録・表示・編集画面用の API ---------- */
+$block_supported = is_wp_version_compatible('6.6');
+$registered = WP_Block_Type_Registry::get_instance()->is_registered('tetote-jobs/jobs-list');
+$check('ブロック: WordPress 6.6 以上でだけ登録する（6.5 はショートコードのみ）', $block_supported === $registered);
+
+$render = fn($attrs) => tetote_jobs_render_block($attrs);
+$html = $render(['jobId' => 'zz-closed']);
+$check('ブロック: 募集終了の職種は一覧と同じく「募集終了」と示す', false !== strpos($html, '募集終了') && false !== strpos($html, '<h3 class="tetote-jobs__name">'));
+$check('ブロック: 該当なしは一覧と同じ文言', false !== strpos($render(['jobId' => 'no-such-job']), '現在、掲載している募集はありません。'));
+$check('ブロック: ショートコードの職種名は h2 のまま', false !== strpos(tetote_jobs_render_list(), '<h2 class="tetote-jobs__name">'));
+$check('ブロック: 職種名をエスケープする', false === strpos($render([]) . $render(['count' => 20]), '<script>'));
+
+$draft_id = $create('block-draft', '下書きの職種', true, 'draft');
+wp_set_current_user($subscriber_id);
+$denied = rest_get_server()->dispatch(new WP_REST_Request('GET', '/tetote-jobs/v1/block-jobs'));
+$check('ブロック API: 投稿を編集できないユーザーは読めない', in_array($denied->get_status(), [401, 403], true));
+wp_set_current_user($admin_id);
+$data = rest_get_server()->dispatch(new WP_REST_Request('GET', '/tetote-jobs/v1/block-jobs'))->get_data();
+$check('ブロック API: 公開中の職種は公開側と同じ並び', array_column($data['published'], 'id') === array_column(tetote_jobs_get_jobs(), 'id'));
+$check('ブロック API: 下書きの職種を状態つきで返す', in_array(['id' => 'block-draft', 'name' => '下書きの職種', 'open' => true, 'status' => 'draft'], $data['unpublished'], true));
+
+/* ---------- 採用デモページ（demo/seed.php） ---------- */
+require_once TETOTE_JOBS_DIR . 'demo/seed.php';
+$first = tetote_jobs_demo_seed_recruit_page();
+if ($block_supported) {
+  $page = get_post($first);
+  $check('デモページ: 標準ブロックと募集一覧ブロックで作る', $page && has_block('core/image', $page) && has_block('core/heading', $page) && has_block('core/buttons', $page) && has_block('tetote-jobs/jobs-list', $page));
+  wp_update_post(['ID' => $first, 'post_content' => $page->post_content . "\n<!-- wp:paragraph --><p>編集した文章</p><!-- /wp:paragraph -->"]);
+  $second = tetote_jobs_demo_seed_recruit_page();
+  $check('デモページ: 再実行してもページを増やさず、編集を上書きしない', $first === $second && false !== strpos(get_post($second)->post_content, '編集した文章') && 1 === count(get_posts(['post_type' => 'page', 'name' => 'recruit-demo', 'post_status' => 'any'])));
+  $check('デモページ: 画像は 1 回だけメディアに入れる', 1 === count(get_posts(['post_type' => 'attachment', 'meta_key' => '_tetote_jobs_demo_image', 'post_status' => 'inherit', 'numberposts' => -1])));
+} else {
+  $check('デモページ: ブロックを使えない環境では作らない', 0 === $first && !get_page_by_path('recruit-demo'));
+}
+
 /* ---------- 結果 ---------- */
 $failed = count(array_filter($results, fn($r) => 'FAIL' === $r[0]));
-$output = implode("\n", array_map(fn($r) => $r[0] . '  ' . $r[1], $results));
+//  どのバージョンで実行したかを結果の先頭に出す（CI のログで、指定したバージョンで動いたかを確かめられるように）
+$output = sprintf("WordPress %s / PHP %s\n\n", get_bloginfo('version'), PHP_VERSION);
+$output .= implode("\n", array_map(fn($r) => $r[0] . '  ' . $r[1], $results));
 $output .= sprintf("\n\n%d passed, %d failed\n", count($results) - $failed, $failed);
 echo $output;
 //  run-blueprint は標準出力を表示しないため、出力先がマウントされていればファイルにも書く（package.json の test）

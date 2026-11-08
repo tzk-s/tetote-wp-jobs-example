@@ -6,7 +6,13 @@
  * Requires at least: 6.5
  * Requires PHP:      8.0
  * Author:            tzk-s
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       tetote-jobs
+ *
+ * Copyright (c) 2026 tzk-s
+ * このプラグインは GNU General Public License v2 またはそれ以降のバージョンで提供します（同梱の LICENSE）。
+ * ポートフォリオ用のデモで、本番環境での動作・セキュリティ・互換性の保証やサポートはありません。
  *
  * 【役割の分け方】
  *   includes/fields.php    … 募集要項の項目の定義（項目名・入力の種類・更新担当者向けの説明）。ここ 1 か所だけで持つ
@@ -14,6 +20,7 @@
  *   includes/query.php     … 募集職種の取得・並べ替え・募集中かどうかの判定
  *   includes/admin.php     … 管理画面の入力欄・保存処理・一覧の列・職種 ID の固定
  *   includes/frontend.php  … 公開側の一覧（ショートコード）と詳細の表示
+ *   includes/block.php     … 募集一覧ブロックの登録・公開側の表示・入力値の検証（編集画面は src/jobs-list/ の TSX）
  *
  * 応募の受付・メール送信は扱わない（このサンプルの対象外）。
  */
@@ -31,6 +38,7 @@ require_once TETOTE_JOBS_DIR . 'includes/post-type.php';
 require_once TETOTE_JOBS_DIR . 'includes/query.php';
 require_once TETOTE_JOBS_DIR . 'includes/admin.php';
 require_once TETOTE_JOBS_DIR . 'includes/frontend.php';
+require_once TETOTE_JOBS_DIR . 'includes/block.php';
 
 /**
  * 有効化時にパーマリンクを作り直す（/jobs/<職種 ID>/ をすぐに開けるようにする）。

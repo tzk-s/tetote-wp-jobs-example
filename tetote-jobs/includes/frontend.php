@@ -18,9 +18,10 @@ if (!defined('ABSPATH')) {
   exit();
 }
 
+//  CSS は includes/block.php で登録する（ブロックとも共用）。ブロックのページでは WordPress が自動で読み込む
 add_action('wp_enqueue_scripts', function () {
   if (is_singular(TETOTE_JOBS_POST_TYPE) || (is_singular() && has_shortcode((string) get_post_field('post_content'), 'tetote_jobs'))) {
-    wp_enqueue_style('tetote-jobs', TETOTE_JOBS_URL . 'assets/tetote-jobs.css', [], TETOTE_JOBS_VERSION);
+    wp_enqueue_style('tetote-jobs');
   }
 });
 
@@ -37,11 +38,21 @@ function tetote_jobs_multiline($value)
 }
 
 /*=======================================================================================
-  一覧: [tetote_jobs]
+  一覧: [tetote_jobs]（募集一覧ブロックも同じ HTML を使う）
 =======================================================================================*/
 function tetote_jobs_render_list()
 {
-  $jobs = tetote_jobs_get_jobs();
+  return tetote_jobs_render_jobs(tetote_jobs_get_jobs());
+}
+add_shortcode('tetote_jobs', 'tetote_jobs_render_list');
+
+/**
+ * 一覧の HTML。表示する職種が無いときは「該当なし」の文言を出す
+ * @param int $heading_level 職種名の見出しの階層。ショートコードはページの直下に置くので 2、ブロックはページ内の見出しの下に置くことが多いので 3
+ */
+function tetote_jobs_render_jobs(array $jobs, $heading_level = 2)
+{
+  $h = 3 === $heading_level ? 'h3' : 'h2';
   if (!$jobs) {
     return '<p class="tetote-jobs__empty">現在、掲載している募集はありません。</p>';
   }
@@ -49,7 +60,7 @@ function tetote_jobs_render_list()
   $html = '<ul class="tetote-jobs">';
   foreach ($jobs as $job) {
     $html .= '<li class="tetote-jobs__item' . ($job['open'] ? '' : ' is-closed') . '">';
-    $html .= '<h2 class="tetote-jobs__name">' . esc_html($job['name']) . tetote_jobs_status_badge($job) . '</h2>';
+    $html .= '<' . $h . ' class="tetote-jobs__name">' . esc_html($job['name']) . tetote_jobs_status_badge($job) . '</' . $h . '>';
     if ('' !== $job['summary']) {
       $html .= '<p class="tetote-jobs__summary">' . esc_html($job['summary']) . '</p>';
     }
@@ -66,7 +77,6 @@ function tetote_jobs_render_list()
   }
   return $html . '</ul>';
 }
-add_shortcode('tetote_jobs', 'tetote_jobs_render_list');
 
 /*=======================================================================================
   詳細: 本文の前に募集状態、後ろに募集要項
