@@ -27,6 +27,14 @@
 2. 画面上部のサイト名から公開側を開き、メニューの「募集一覧」を開く
 3. 「ソリューション営業」が一覧の後ろに回り、「募集終了」と表示されていること、詳細ページに終了の案内が出ることを確認する
 
+募集一覧ブロックを試す（同じ「管理画面を試す」のリンクから）:
+
+1. 左のメニューの「固定ページ」（Pages）から「採用情報（デモ）」を開く
+2. 「募集中の職種」の下の一覧をクリックし、右側の「表示する職種」で「表示件数」を 2 → 3 に変える
+3. 右上の「保存」（Save）を押し、「固定ページを表示」（View Page）で、公開側が 3 件になったことを確認する
+
+職種の選び方や、選んだ職種が非公開になったときの表示は「[募集一覧ブロックと採用デモページ](#募集一覧ブロックと採用デモページ)」にまとめています。
+
 Playground は起動のたびに GitHub の main ブランチからプラグインを読み込みます（Blueprint は `playground/` にあります）。デモでは、このサンプルで使わない管理メニュー（投稿・メディア・コメント・ツール）と WordPress の初期サンプル記事を隠しています（`tetote-jobs/demo/admin.php`。プラグイン本体には含みません）。社内ネットワークなどで外部サイトが制限されている場合は開けないことがあります。初回の起動には数十秒かかります。
 
 ## このサンプルで見てほしいこと
@@ -228,10 +236,13 @@ Docker（2026 年 11 月 7 日、作者の Mac（Apple シリコン）、Docker 
 - GitHub Actions の結果の先頭に、実際に動いた WordPress と PHP のバージョンが出ること。6.5 のジョブは WordPress 6.5.x、最新版のジョブは 7.1.4 で動くこと
 - 手元の Playground CLI で、WordPress 6.5 + PHP 8.0 の組み合わせでも 47 件すべて成功すること
 
+WordPress Playground（ブラウザー版、2026 年 11 月 8 日、main に取り込んだあと。WordPress は最新版）:
+
+- 「管理画面を試す」から採用デモページを開き、表示件数を 2 → 3 に変えて保存すると、公開側が 3 件になること
+
 未確認:
 
-- WordPress Playground（ブラウザー版）で、採用デモページとブロックを操作できること（main に取り込まれるまで、Playground はこのブロックを読み込まない）
-- WordPress 6.6〜7.0 でのブロックの動作（7.1 でのみ確認）
+- WordPress 6.6〜7.0 でのブロックの編集画面の操作。要件は WordPress 6.6 以上ですが、操作を確認したのは WordPress 7.1 だけです
 - 管理画面の見た目（Playground CLI の確認環境では管理画面の CSS・JavaScript を読み込めず、画面の装飾なしで操作のみ確認しました。ブロックエディターは Docker の WordPress 7.1 で装飾ありで確認）
 - Safari・Firefox・実機、スクリーンリーダーでの読み上げ
 - Twenty Twenty-Four 以外のテーマでの表示
@@ -245,10 +256,11 @@ Copyright (c) 2026 tzk-s
 
 | 対象 | ライセンス |
 | --- | --- |
-| WordPress のプラグイン（`tetote-jobs/`。ビルド済みのファイルとデモ用の画像を含む）と、ブロックのソース（`src/`） | [GNU General Public License v2 またはそれ以降](tetote-jobs/LICENSE)（GPL-2.0-or-later） |
-| 上記以外（README・`docs/` の文書とスクリーンショット・Docker と Playground の設定・テスト・ビルドの設定） | All rights reserved。評価のために clone して手元・Docker・WordPress Playground で実行・テスト・ビルドすることは問題ありません。それ以外の再利用・再配布は許諾していません |
+| WordPress のプラグイン（`tetote-jobs/`。ビルド済みのファイルとデモ用の画像を含む）、ブロックのソース（`src/`）、ビルド済みのファイルを作り直すための設定（`package.json`・`package-lock.json`・`tsconfig.json`） | [GNU General Public License v2 またはそれ以降](tetote-jobs/LICENSE)（GPL-2.0-or-later） |
+| 上記以外（README・`docs/` の文書とスクリーンショット・Docker と Playground の設定・テスト） | All rights reserved。評価のために clone して手元・Docker・WordPress Playground で実行・テスト・ビルドすることは問題ありません。それ以外の再利用・再配布は許諾していません |
 
 - プラグインを GPL にしているのは、WordPress のプラグインは WordPress と同じ GPL で配布するのが WordPress の方針だからです。GPL の条件に従えば、プラグインの利用・改変・再配布ができます。著作権は作者に残り、再配布するときは著作権表示とライセンスを残す必要があります。
+- ビルドの設定も GPL に含めているのは、GPL v2 では、ビルドを制御するスクリプトもソースの一部とされるためです。ビルド済みのファイルを再配布する人が、同じ条件でソースから作り直せるようにしています。
 - GitHub の利用規約により、公開リポジトリは GitHub 上で閲覧・fork できます。
 - 依存ライブラリはそれぞれのライセンスに従います（`package-lock.json` 参照）。リポジトリにはライブラリ本体を含めていません。ビルド済みのファイル（`tetote-jobs/build/`）にも、ライブラリのコードは入っていません（webpack が生成する数行の読み込み処理を除く。WordPress の部品は WordPress 本体のものを使います）。
 - フォント・元サイトのデザイン素材・第三者の画像は含めていません。含まれる画像は、作者が図形だけで描いたデモ用の画像（`tetote-jobs/demo/images/`）と、このサンプルの画面のスクリーンショット（`docs/images/`。WordPress の管理画面と標準テーマ Twenty Twenty-Five が写っています）だけです。
