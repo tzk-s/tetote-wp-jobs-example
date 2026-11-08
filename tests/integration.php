@@ -206,7 +206,9 @@ if ($block_supported) {
 
 /* ---------- 結果 ---------- */
 $failed = count(array_filter($results, fn($r) => 'FAIL' === $r[0]));
-$output = implode("\n", array_map(fn($r) => $r[0] . '  ' . $r[1], $results));
+//  どのバージョンで実行したかを結果の先頭に出す（CI のログで、指定したバージョンで動いたかを確かめられるように）
+$output = sprintf("WordPress %s / PHP %s\n\n", get_bloginfo('version'), PHP_VERSION);
+$output .= implode("\n", array_map(fn($r) => $r[0] . '  ' . $r[1], $results));
 $output .= sprintf("\n\n%d passed, %d failed\n", count($results) - $failed, $failed);
 echo $output;
 //  run-blueprint は標準出力を表示しないため、出力先がマウントされていればファイルにも書く（package.json の test）
