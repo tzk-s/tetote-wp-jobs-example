@@ -1,6 +1,6 @@
 <?php
 /**
- * デモ用の架空データを入れる（WordPress Playground の Blueprint から 1 回だけ実行する）
+ * デモ用の架空データを入れる（WordPress Playground の Blueprint と Docker の docker/setup.sh から実行する）
  *
  * プラグイン本体からは読み込まない。実在の求人ではない。
  * 職種名と項目は、tetote-application-example の架空データ（public/data/jobs.json）と同じにしている。
@@ -66,7 +66,7 @@ function tetote_jobs_demo_jobs()
   ];
 }
 
-/** @return array{list_page_id: int, job_ids: array<string, int>} */
+/** @return array{list_page_id: int, job_ids: array<string, int>, recruit_page_id: int} */
 function tetote_jobs_demo_seed()
 {
   $job_ids = [];
@@ -108,7 +108,84 @@ function tetote_jobs_demo_seed()
       'post_content' => '<!-- wp:shortcode -->[tetote_jobs]<!-- /wp:shortcode -->',
     ]);
 
-  return ['list_page_id' => $list_page_id, 'job_ids' => $job_ids];
+  return ['list_page_id' => $list_page_id, 'job_ids' => $job_ids, 'recruit_page_id' => tetote_jobs_demo_seed_recruit_page()];
+}
+
+/**
+ * 採用デモページ（/recruit-demo/）を作る。標準ブロック（画像・見出し・段落・ボタン）と募集一覧ブロックで構成する
+ * 同じスラッグのページがあれば何もしない（編集した内容を上書きしない。ページを増やさない）。
+ * 募集一覧ブロックを使えない環境（WordPress 6.5）では作らない。
+ */
+function tetote_jobs_demo_seed_recruit_page()
+{
+  if (!function_exists('tetote_jobs_block_is_supported') || !tetote_jobs_block_is_supported()) {
+    return 0;
+  }
+  $page = get_page_by_path('recruit-demo');
+  if ($page) {
+    return $page->ID;
+  }
+
+  $image_id = tetote_jobs_demo_import_image();
+  $image = '';
+  if ($image_id) {
+    $image = sprintf(
+      "<!-- wp:image {\"id\":%1\$d,\"sizeSlug\":\"large\",\"linkDestination\":\"none\"} -->\n<figure class=\"wp-block-image size-large\"><img src=\"%2\$s\" alt=\"%3\$s\" class=\"wp-image-%1\$d\"/></figure>\n<!-- /wp:image -->\n\n",
+      $image_id,
+      esc_url(wp_get_attachment_image_url($image_id, 'large')),
+      esc_attr('3 人の人物を図形で表したイラスト'),
+    );
+  }
+
+  $content =
+    $image .
+    "<!-- wp:heading -->\n<h2 class=\"wp-block-heading\">一緒に働く仲間を募集しています</h2>\n<!-- /wp:heading -->\n\n" .
+    "<!-- wp:paragraph -->\n<p>TETOTE は、お客様の業務に寄り添い、仕組みづくりから定着までを一緒に進める会社です。（デモ用の架空の企業・文章です）</p>\n<!-- /wp:paragraph -->\n\n" .
+    "<!-- wp:heading -->\n<h2 class=\"wp-block-heading\">募集中の職種</h2>\n<!-- /wp:heading -->\n\n" .
+    "<!-- wp:tetote-jobs/jobs-list {\"count\":2} /-->\n\n" .
+    "<!-- wp:buttons -->\n<div class=\"wp-block-buttons\"><!-- wp:button -->\n<div class=\"wp-block-button\"><a class=\"wp-block-button__link wp-element-button\" href=\"/jobs-list/\">すべての募集を見る</a></div>\n<!-- /wp:button --></div>\n<!-- /wp:buttons -->";
+
+  return (int) wp_insert_post([
+    'post_type' => 'page',
+    'post_status' => 'publish',
+    'post_title' => '採用情報（デモ）',
+    'post_name' => 'recruit-demo',
+    'post_content' => $content,
+  ]);
+}
+
+/** デモ用の画像（demo/images/recruit-hero.png。図形だけで描いた自作の画像）をメディアに入れる。入れ済みならその ID を返す */
+function tetote_jobs_demo_import_image()
+{
+  $existing = get_posts([
+    'post_type' => 'attachment',
+    'post_status' => 'inherit',
+    'meta_key' => '_tetote_jobs_demo_image',
+    'meta_value' => 'recruit-hero',
+    'fields' => 'ids',
+    'numberposts' => 1,
+  ]);
+  if ($existing) {
+    return (int) $existing[0];
+  }
+
+  require_once ABSPATH . 'wp-admin/includes/file.php';
+  require_once ABSPATH . 'wp-admin/includes/media.php';
+  require_once ABSPATH . 'wp-admin/includes/image.php';
+
+  //  media_handle_sideload は一時ファイルを移動するので、プラグインの画像をコピーしてから渡す
+  $tmp = wp_tempnam('recruit-hero.png');
+  if (!$tmp || !copy(TETOTE_JOBS_DIR . 'demo/images/recruit-hero.png', $tmp)) {
+    return 0;
+  }
+  $id = media_handle_sideload(['name' => 'recruit-hero.png', 'tmp_name' => $tmp], 0, '採用デモの画像（自作の図形イラスト）', ['post_name' => 'recruit-hero']);
+  if (is_wp_error($id)) {
+    @unlink($tmp);
+    return 0;
+  }
+  update_post_meta($id, '_tetote_jobs_demo_image', 'recruit-hero');
+  update_post_meta($id, '_wp_attachment_image_alt', '3 人の人物を図形で表したイラスト');
+  return (int) $id;
 }
 
 /**
