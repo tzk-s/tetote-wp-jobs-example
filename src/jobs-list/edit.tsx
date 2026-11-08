@@ -8,6 +8,9 @@
  *
  * 【受け持たないこと】
  *   - 公開側の HTML・入力値の検証（PHP の includes/block.php）。編集画面の値は信用せず、PHP でもう一度確かめる
+ *
+ * 【書き方】
+ *   - ブロックの本体（export default の Edit）だけ function で書き、それ以外の補助の関数は const のアロー関数で書く
  */
 import apiFetch from '@wordpress/api-fetch';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
@@ -31,7 +34,7 @@ const STATUS_LABELS: Record<string, string> = {
 type LoadState = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; data: BlockJobsResponse };
 
 /** 職種の一覧を REST API から読む（編集できるユーザーだけが読める） */
-function useBlockJobs(): LoadState {
+const useBlockJobs = (): LoadState => {
   const [state, setState] = useState<LoadState>({ kind: 'loading' });
   useEffect(() => {
     let active = true;
@@ -44,10 +47,10 @@ function useBlockJobs(): LoadState {
     };
   }, []);
   return state;
-}
+};
 
 /** 選択中の職種が公開側に出せない理由（出せるなら null） */
-function describeMissing(jobId: string, data: BlockJobsResponse): string | null {
+const describeMissing = (jobId: string, data: BlockJobsResponse): string | null => {
   if (!jobId || data.published.some((job) => job.id === jobId)) {
     return null;
   }
@@ -57,11 +60,10 @@ function describeMissing(jobId: string, data: BlockJobsResponse): string | null 
     return `選択中の職種「${unpublished.name}」は公開されていません（${label}）。公開側には「現在、掲載している募集はありません。」と表示されます。`;
   }
   return `選択中の職種（ID: ${jobId}）が見つかりません。削除された可能性があります。公開側には「現在、掲載している募集はありません。」と表示されます。`;
-}
+};
 
-function jobLabel(job: BlockJob): string {
-  return job.open ? job.name : `${job.name}（募集終了）`;
-}
+/** 職種のセレクトに出す名前（募集終了なら書き添える） */
+const jobLabel = (job: BlockJob): string => (job.open ? job.name : `${job.name}（募集終了）`);
 
 export default function Edit({ attributes, setAttributes }: BlockEditProps<JobsListAttributes>) {
   const { jobId, count } = attributes;
